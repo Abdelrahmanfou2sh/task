@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:get_it/get_it.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import '../../auth/presentation/cubit/auth_cubit.dart';
 import '../cubit/send_money_cubit.dart';
 
 class SendMoneyPage extends StatefulWidget {
@@ -17,7 +20,10 @@ class _SendMoneyPageState extends State<SendMoneyPage> {
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (_) => SendMoneyCubit(),
+      create: (_) => SendMoneyCubit(
+        firestore: GetIt.I<FirebaseFirestore>(),
+        authCubit: context.read<AuthCubit>(),
+      ),
       child: Scaffold(
         appBar: AppBar(title: const Text('Send Money')),
         body: BlocConsumer<SendMoneyCubit, SendMoneyState>(

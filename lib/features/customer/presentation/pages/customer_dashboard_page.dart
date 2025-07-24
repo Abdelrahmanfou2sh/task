@@ -5,6 +5,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../auth/presentation/cubit/auth_cubit.dart';
 import '../cubit/customer_home_cubit.dart';
 import 'send_money_page.dart';
+import 'transaction_history_page.dart';
 
 class CustomerDashboardPage extends StatelessWidget {
   const CustomerDashboardPage({Key? key}) : super(key: key);
@@ -60,6 +61,16 @@ class CustomerDashboardPage extends StatelessWidget {
                         onPressed: () => context.read<CustomerHomeCubit>().toggleBalanceVisibility(),
                       ),
                     ],
+                  ),
+                  const SizedBox(height: 32),
+                  ElevatedButton.icon(
+                    icon: const Icon(Icons.history),
+                    label: const Text('Transaction History'),
+                    onPressed: () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(builder: (_) => const TransactionHistoryPage()),
+                      );
+                    },
                   ),
                 ],
               ),
