@@ -6,6 +6,8 @@ import '../../auth/presentation/cubit/auth_cubit.dart';
 import '../cubit/customer_home_cubit.dart';
 import 'send_money_page.dart';
 import 'transaction_history_page.dart';
+import 'receive_qr_page.dart';
+import 'deposit_withdraw_page.dart';
 
 class CustomerDashboardPage extends StatelessWidget {
   const CustomerDashboardPage({Key? key}) : super(key: key);
@@ -69,6 +71,24 @@ class CustomerDashboardPage extends StatelessWidget {
                     onPressed: () {
                       Navigator.of(context).push(
                         MaterialPageRoute(builder: (_) => const TransactionHistoryPage()),
+                      );
+                    },
+                  ),
+                  ElevatedButton.icon(
+                    icon: const Icon(Icons.qr_code),
+                    label: const Text('Receive (Show My QR)'),
+                    onPressed: () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(builder: (_) => const ReceiveQRPage()),
+                      );
+                    },
+                  ),
+                  ElevatedButton.icon(
+                    icon: const Icon(Icons.account_balance_wallet),
+                    label: const Text('Deposit / Withdraw'),
+                    onPressed: () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(builder: (_) => const DepositWithdrawPage()),
                       );
                     },
                   ),

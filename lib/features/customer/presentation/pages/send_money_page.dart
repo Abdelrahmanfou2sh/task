@@ -4,6 +4,7 @@ import 'package:get_it/get_it.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../auth/presentation/cubit/auth_cubit.dart';
 import '../cubit/send_money_cubit.dart';
+import 'qr_scanner_page.dart';
 
 class SendMoneyPage extends StatefulWidget {
   const SendMoneyPage({Key? key}) : super(key: key);
@@ -55,6 +56,21 @@ class _SendMoneyPageState extends State<SendMoneyPage> {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
+                    ElevatedButton.icon(
+                      icon: const Icon(Icons.qr_code_scanner),
+                      label: const Text('Scan QR'),
+                      onPressed: () async {
+                        final scanned = await Navigator.of(context).push<String>(
+                          MaterialPageRoute(builder: (_) => const QRScannerPage()),
+                        );
+                        if (scanned != null && scanned.isNotEmpty) {
+                          setState(() {
+                            _recipientController.text = scanned;
+                          });
+                        }
+                      },
+                    ),
+                    const SizedBox(height: 16),
                     TextFormField(
                       controller: _recipientController,
                       decoration: const InputDecoration(labelText: 'Recipient (phone/email/ID)'),
