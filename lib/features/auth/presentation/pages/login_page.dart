@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
 import '../cubit/auth_cubit.dart';
 
 class LoginPage extends StatefulWidget {
@@ -21,7 +22,13 @@ class _LoginPageState extends State<LoginPage> {
       body: BlocConsumer<AuthCubit, AuthState>(
         listener: (context, state) {
           if (state is AuthAuthenticated) {
-            // TODO: Navigate based on state.user.role
+            final role = state.user.role;
+            if (role == 'customer' || role == 'both') {
+              GoRouter.of(context).go('/customer');
+            } else if (role == 'agent') {
+              GoRouter.of(context).go('/agent');
+            }
+            // You can add more role handling here if needed
           }
         },
         builder: (context, state) {

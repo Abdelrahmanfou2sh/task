@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../features/auth/presentation/pages/login_page.dart';
-// TODO: Import customer, agent, admin dashboard pages
+import '../../features/customer/presentation/pages/customer_dashboard_page.dart';
+import '../../features/agent/presentation/pages/agent_dashboard_page.dart';
 
 final GoRouter appRouter = GoRouter(
   routes: [
@@ -9,9 +10,14 @@ final GoRouter appRouter = GoRouter(
       path: '/',
       builder: (context, state) => const LoginPage(),
     ),
-    // TODO: Add customer dashboard route
-    // TODO: Add agent dashboard route
-    // TODO: Add admin dashboard route
+    GoRoute(
+      path: '/customer',
+      builder: (context, state) => const CustomerDashboardPage(),
+    ),
+    GoRoute(
+      path: '/agent',
+      builder: (context, state) => const AgentDashboardPage(),
+    ),
   ],
   // TODO: Add redirect logic based on auth and role
 ); 
