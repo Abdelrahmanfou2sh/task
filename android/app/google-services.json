@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "355807890314",
+    "project_id": "live-tracker-11fd1",
+    "storage_bucket": "live-tracker-11fd1.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:355807890314:android:0c30ed95864aac64701673",
+        "android_client_info": {
+          "package_name": "com.example.auvnet"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBCq8sMirPYO2LlOdTLI1mSopPe_MBRxJU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:355807890314:android:af67f442315bd8fb701673",
+        "android_client_info": {
+          "package_name": "com.example.task"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBCq8sMirPYO2LlOdTLI1mSopPe_MBRxJU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
