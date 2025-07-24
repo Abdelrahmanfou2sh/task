@@ -1,13 +1,25 @@
 import 'package:get_it/get_it.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import '../../features/auth/data/repositories/auth_repository_impl.dart';
+import '../../features/auth/domain/repositories/auth_repository.dart';
+import '../../features/auth/presentation/cubit/auth_cubit.dart';
 
 final sl = GetIt.instance;
 
 Future<void> init() async {
-  // TODO: Register repositories
-  // sl.registerLazySingleton<AuthRepository>(() => AuthRepositoryImpl());
+  // Firebase
+  sl.registerLazySingleton(() => FirebaseAuth.instance);
+  sl.registerLazySingleton(() => FirebaseFirestore.instance);
 
-  // TODO: Register cubits
-  // sl.registerFactory(() => AuthCubit(sl()));
+  // Repositories
+  sl.registerLazySingleton<AuthRepository>(
+    () => AuthRepositoryImpl(
+      firebaseAuth: sl(),
+      firestore: sl(),
+    ),
+  );
 
-  // TODO: Register other services
+  // Cubits
+  sl.registerFactory(() => AuthCubit(sl()));
 } 

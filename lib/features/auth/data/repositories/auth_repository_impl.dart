@@ -11,30 +11,61 @@ class AuthRepositoryImpl implements AuthRepository {
 
   @override
   Future<UserModel?> signIn(String email, String password) async {
-    // TODO: Implement sign in logic
-    return null;
+    try {
+      final credential = await firebaseAuth.signInWithEmailAndPassword(
+        email: email,
+        password: password,
+      );
+      final uid = credential.user?.uid;
+      if (uid == null) return null;
+      final doc = await firestore.collection('users').doc(uid).get();
+      if (!doc.exists) return null;
+      return UserModel.fromMap(doc.data()!, uid);
+    } catch (e) {
+      rethrow;
+    }
   }
 
   @override
   Future<UserModel?> signUp(String email, String password, String role) async {
-    // TODO: Implement sign up logic
-    return null;
+    try {
+      final credential = await firebaseAuth.createUserWithEmailAndPassword(
+        email: email,
+        password: password,
+      );
+      final uid = credential.user?.uid;
+      if (uid == null) return null;
+      final userModel = UserModel(
+        id: uid,
+        email: email,
+        displayName: credential.user?.displayName,
+        role: role,
+      );
+      await firestore.collection('users').doc(uid).set(userModel.toMap());
+      return userModel;
+    } catch (e) {
+      rethrow;
+    }
   }
 
   @override
   Future<void> signOut() async {
-    // TODO: Implement sign out logic
+    await firebaseAuth.signOut();
   }
 
   @override
   Future<UserModel?> getCurrentUser() async {
-    // TODO: Implement get current user logic
-    return null;
+    final user = firebaseAuth.currentUser;
+    if (user == null) return null;
+    final doc = await firestore.collection('users').doc(user.uid).get();
+    if (!doc.exists) return null;
+    return UserModel.fromMap(doc.data()!, user.uid);
   }
 
   @override
   Future<String?> getUserRole(String uid) async {
-    // TODO: Implement get user role logic
-    return null;
+    final doc = await firestore.collection('users').doc(uid).get();
+    if (!doc.exists) return null;
+    return doc.data()!["role"] as String?;
   }
 } 
