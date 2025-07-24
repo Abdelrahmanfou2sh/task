@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import '../cubit/auth_cubit.dart';
+import 'kyc_page.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({Key? key}) : super(key: key);
@@ -23,12 +24,16 @@ class _LoginPageState extends State<LoginPage> {
         listener: (context, state) {
           if (state is AuthAuthenticated) {
             final role = state.user.role;
-            if (role == 'customer' || role == 'both') {
+            if (role == 'agent' || role == 'both') {
+              // For demo, always prompt KYC after sign up for agent/both
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                Navigator.of(context).pushReplacement(
+                  MaterialPageRoute(builder: (_) => const KYCPage()),
+                );
+              });
+            } else if (role == 'customer') {
               GoRouter.of(context).go('/customer');
-            } else if (role == 'agent') {
-              GoRouter.of(context).go('/agent');
             }
-            // You can add more role handling here if needed
           }
         },
         builder: (context, state) {

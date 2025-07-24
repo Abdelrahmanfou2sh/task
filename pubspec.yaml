@@ -21,6 +21,8 @@ dependencies:
   printing: ^5.14.2
   path_provider: ^2.1.5
   share_plus: ^11.0.0
+  image_picker: ^1.1.2
+  firebase_storage: ^12.4.10
 
 dev_dependencies:
   flutter_test:
