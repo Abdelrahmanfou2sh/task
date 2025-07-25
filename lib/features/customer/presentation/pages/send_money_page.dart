@@ -21,10 +21,7 @@ class _SendMoneyPageState extends State<SendMoneyPage> {
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (_) => SendMoneyCubit(
-        firestore: GetIt.I<FirebaseFirestore>(),
-        authCubit: context.read<AuthCubit>(),
-      ),
+      create: (_) => GetIt.I<SendMoneyCubit>(),
       child: Scaffold(
         appBar: AppBar(title: const Text('Send Money')),
         body: BlocConsumer<SendMoneyCubit, SendMoneyState>(
@@ -46,6 +43,11 @@ class _SendMoneyPageState extends State<SendMoneyPage> {
             }
           },
           builder: (context, state) {
+            final authState = context.read<AuthCubit>().state;
+            String? senderId;
+            if (authState is AuthAuthenticated) {
+              senderId = authState.user.id;
+            }
             if (state is SendMoneyLoading) {
               return const Center(child: CircularProgressIndicator());
             }
@@ -91,10 +93,10 @@ class _SendMoneyPageState extends State<SendMoneyPage> {
                     const SizedBox(height: 24),
                     ElevatedButton(
                       onPressed: () {
-                        if (_formKey.currentState!.validate()) {
+                        if (_formKey.currentState!.validate() && senderId != null) {
                           final recipient = _recipientController.text.trim();
                           final amount = double.parse(_amountController.text.trim());
-                          context.read<SendMoneyCubit>().sendMoney(recipient, amount);
+                          context.read<SendMoneyCubit>().sendMoney(senderId!, recipient, amount);
                         }
                       },
                       child: const Text('Send'),

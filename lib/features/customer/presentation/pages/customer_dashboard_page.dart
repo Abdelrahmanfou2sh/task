@@ -15,97 +15,103 @@ class CustomerDashboardPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (_) => CustomerHomeCubit(
-        firestore: GetIt.I<FirebaseFirestore>(),
-        authCubit: context.read<AuthCubit>(),
-      ),
-      child: Scaffold(
-        appBar: AppBar(
-          title: const Text('Customer Dashboard'),
-          actions: [
-            IconButton(
-              icon: const Icon(Icons.logout),
-              onPressed: () {
-                context.read<AuthCubit>().signOut();
-              },
+      create: (_) => GetIt.I<CustomerHomeCubit>(),
+      child: Builder(
+        builder: (context) {
+          final authState = context.read<AuthCubit>().state;
+          String? uid;
+          if (authState is AuthAuthenticated) {
+            uid = authState.user.id;
+            context.read<CustomerHomeCubit>().fetchBalance(uid);
+          }
+          return Scaffold(
+            appBar: AppBar(
+              title: const Text('Customer Dashboard'),
+              actions: [
+                IconButton(
+                  icon: const Icon(Icons.logout),
+                  onPressed: () {
+                    context.read<AuthCubit>().signOut();
+                  },
+                ),
+              ],
             ),
-          ],
-        ),
-        body: BlocBuilder<CustomerHomeCubit, CustomerHomeState>(
-          builder: (context, state) {
-            final authState = context.watch<AuthCubit>().state;
-            String userInfo = '';
-            if (authState is AuthAuthenticated) {
-              userInfo = authState.user.email ?? authState.user.displayName ?? '';
-            }
-            if (state.loading) {
-              return const Center(child: CircularProgressIndicator());
-            }
-            return Padding(
-              padding: const EdgeInsets.all(24.0),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  Text('Welcome, $userInfo', style: const TextStyle(fontSize: 18)),
-                  const SizedBox(height: 32),
-                  Text('Wallet Balance', style: Theme.of(context).textTheme.headline6),
-                  const SizedBox(height: 16),
-                  Row(
+            body: BlocBuilder<CustomerHomeCubit, CustomerHomeState>(
+              builder: (context, state) {
+                String userInfo = '';
+                if (authState is AuthAuthenticated) {
+                  userInfo = authState.user.email ?? authState.user.displayName ?? '';
+                }
+                if (state.loading) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+                return Padding(
+                  padding: const EdgeInsets.all(24.0),
+                  child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
-                      Text(
-                        state.showBalance ? ' EC ${state.balance.toStringAsFixed(2)}' : '****',
-                        style: const TextStyle(fontSize: 32, fontWeight: FontWeight.bold),
+                      Text('Welcome, $userInfo', style: const TextStyle(fontSize: 18)),
+                      const SizedBox(height: 32),
+                      Text('Wallet Balance', style: Theme.of(context).textTheme.headline6),
+                      const SizedBox(height: 16),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            state.showBalance ? ' EC ${state.balance.toStringAsFixed(2)}' : '****',
+                            style: const TextStyle(fontSize: 32, fontWeight: FontWeight.bold),
+                          ),
+                          IconButton(
+                            icon: Icon(state.showBalance ? Icons.visibility : Icons.visibility_off),
+                            onPressed: () => context.read<CustomerHomeCubit>().toggleBalanceVisibility(),
+                          ),
+                        ],
                       ),
-                      IconButton(
-                        icon: Icon(state.showBalance ? Icons.visibility : Icons.visibility_off),
-                        onPressed: () => context.read<CustomerHomeCubit>().toggleBalanceVisibility(),
+                      const SizedBox(height: 32),
+                      ElevatedButton.icon(
+                        icon: const Icon(Icons.history),
+                        label: const Text('Transaction History'),
+                        onPressed: () {
+                          Navigator.of(context).push(
+                            MaterialPageRoute(builder: (_) => const TransactionHistoryPage()),
+                          );
+                        },
+                      ),
+                      ElevatedButton.icon(
+                        icon: const Icon(Icons.qr_code),
+                        label: const Text('Receive (Show My QR)'),
+                        onPressed: () {
+                          Navigator.of(context).push(
+                            MaterialPageRoute(builder: (_) => const ReceiveQRPage()),
+                          );
+                        },
+                      ),
+                      ElevatedButton.icon(
+                        icon: const Icon(Icons.account_balance_wallet),
+                        label: const Text('Deposit / Withdraw'),
+                        onPressed: () {
+                          Navigator.of(context).push(
+                            MaterialPageRoute(builder: (_) => const DepositWithdrawPage()),
+                          );
+                        },
                       ),
                     ],
                   ),
-                  const SizedBox(height: 32),
-                  ElevatedButton.icon(
-                    icon: const Icon(Icons.history),
-                    label: const Text('Transaction History'),
-                    onPressed: () {
-                      Navigator.of(context).push(
-                        MaterialPageRoute(builder: (_) => const TransactionHistoryPage()),
-                      );
-                    },
-                  ),
-                  ElevatedButton.icon(
-                    icon: const Icon(Icons.qr_code),
-                    label: const Text('Receive (Show My QR)'),
-                    onPressed: () {
-                      Navigator.of(context).push(
-                        MaterialPageRoute(builder: (_) => const ReceiveQRPage()),
-                      );
-                    },
-                  ),
-                  ElevatedButton.icon(
-                    icon: const Icon(Icons.account_balance_wallet),
-                    label: const Text('Deposit / Withdraw'),
-                    onPressed: () {
-                      Navigator.of(context).push(
-                        MaterialPageRoute(builder: (_) => const DepositWithdrawPage()),
-                      );
-                    },
-                  ),
-                ],
-              ),
-            );
-          },
-        ),
-        floatingActionButton: FloatingActionButton(
-          onPressed: () {
-            Navigator.of(context).push(
-              MaterialPageRoute(builder: (_) => const SendMoneyPage()),
-            );
-          },
-          child: const Icon(Icons.send),
-          tooltip: 'Send Money',
-        ),
+                );
+              },
+            ),
+            floatingActionButton: FloatingActionButton(
+              onPressed: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute(builder: (_) => const SendMoneyPage()),
+                );
+              },
+              child: const Icon(Icons.send),
+              tooltip: 'Send Money',
+            ),
+          );
+        },
       ),
     );
   }

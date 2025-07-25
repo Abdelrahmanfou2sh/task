@@ -8,6 +8,7 @@ import 'package:csv/csv.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:cross_file/cross_file.dart';
 import 'package:path_provider/path_provider.dart';
 import 'dart:io';
 
@@ -17,65 +18,72 @@ class TransactionHistoryPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (_) => TransactionHistoryCubit(
-        firestore: GetIt.I<FirebaseFirestore>(),
-        authCubit: context.read<AuthCubit>(),
-      ),
-      child: Scaffold(
-        appBar: AppBar(title: const Text('Transaction History')),
-        body: BlocBuilder<TransactionHistoryCubit, TransactionHistoryState>(
-          builder: (context, state) {
-            if (state is TransactionHistoryLoading) {
-              return const Center(child: CircularProgressIndicator());
-            } else if (state is TransactionHistoryError) {
-              return Center(child: Text(state.message, style: const TextStyle(color: Colors.red)));
-            } else if (state is TransactionHistoryLoaded) {
-              if (state.transactions.isEmpty) {
-                return const Center(child: Text('No transactions found.'));
-              }
-              return Column(
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.end,
+      create: (_) => GetIt.I<TransactionHistoryCubit>(),
+      child: Builder(
+        builder: (context) {
+          final authState = context.read<AuthCubit>().state;
+          String? uid;
+          if (authState is AuthAuthenticated) {
+            uid = authState.user.id;
+            context.read<TransactionHistoryCubit>().fetchTransactions(uid);
+          }
+          return Scaffold(
+            appBar: AppBar(title: const Text('Transaction History')),
+            body: BlocBuilder<TransactionHistoryCubit, TransactionHistoryState>(
+              builder: (context, state) {
+                if (state is TransactionHistoryLoading) {
+                  return const Center(child: CircularProgressIndicator());
+                } else if (state is TransactionHistoryError) {
+                  return Center(child: Text(state.message, style: const TextStyle(color: Colors.red)));
+                } else if (state is TransactionHistoryLoaded) {
+                  if (state.transactions.isEmpty) {
+                    return const Center(child: Text('No transactions found.'));
+                  }
+                  return Column(
                     children: [
-                      ElevatedButton.icon(
-                        icon: const Icon(Icons.file_download),
-                        label: const Text('Export as CSV'),
-                        onPressed: () => exportToCsv(state.transactions),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          ElevatedButton.icon(
+                            icon: const Icon(Icons.file_download),
+                            label: const Text('Export as CSV'),
+                            onPressed: () => exportToCsv(state.transactions),
+                          ),
+                          const SizedBox(width: 8),
+                          ElevatedButton.icon(
+                            icon: const Icon(Icons.picture_as_pdf),
+                            label: const Text('Export as PDF'),
+                            onPressed: () => exportToPdf(state.transactions),
+                          ),
+                        ],
                       ),
-                      const SizedBox(width: 8),
-                      ElevatedButton.icon(
-                        icon: const Icon(Icons.picture_as_pdf),
-                        label: const Text('Export as PDF'),
-                        onPressed: () => exportToPdf(state.transactions),
+                      const SizedBox(height: 8),
+                      Expanded(
+                        child: ListView.separated(
+                          padding: const EdgeInsets.all(16),
+                          itemCount: state.transactions.length,
+                          separatorBuilder: (_, __) => const Divider(),
+                          itemBuilder: (context, index) {
+                            final tx = state.transactions[index];
+                            final type = tx['type'] ?? '';
+                            final amount = tx['amount'] ?? 0.0;
+                            final date = (tx['timestamp'] as Timestamp?)?.toDate();
+                            return ListTile(
+                              leading: Icon(type == 'send' ? Icons.arrow_upward : Icons.arrow_downward, color: type == 'send' ? Colors.red : Colors.green),
+                              title: Text('${type == 'send' ? 'Sent' : 'Received'} EC $amount'),
+                              subtitle: date != null ? Text('${date.toLocal()}') : null,
+                            );
+                          },
+                        ),
                       ),
                     ],
-                  ),
-                  const SizedBox(height: 8),
-                  Expanded(
-                    child: ListView.separated(
-                      padding: const EdgeInsets.all(16),
-                      itemCount: state.transactions.length,
-                      separatorBuilder: (_, __) => const Divider(),
-                      itemBuilder: (context, index) {
-                        final tx = state.transactions[index];
-                        final type = tx['type'] ?? '';
-                        final amount = tx['amount'] ?? 0.0;
-                        final date = (tx['timestamp'] as Timestamp?)?.toDate();
-                        return ListTile(
-                          leading: Icon(type == 'send' ? Icons.arrow_upward : Icons.arrow_downward, color: type == 'send' ? Colors.red : Colors.green),
-                          title: Text('${type == 'send' ? 'Sent' : 'Received'} EC $amount'),
-                          subtitle: date != null ? Text('${date.toLocal()}') : null,
-                        );
-                      },
-                    ),
-                  ),
-                ],
-              );
-            }
-            return const SizedBox.shrink();
-          },
-        ),
+                  );
+                }
+                return const SizedBox.shrink();
+              },
+            ),
+          );
+        },
       ),
     );
   }
@@ -95,7 +103,7 @@ Future<void> exportToCsv(List<Map<String, dynamic>> transactions) async {
   final dir = await getTemporaryDirectory();
   final file = File('${dir.path}/transactions.csv');
   await file.writeAsString(csvData);
-  await Share.shareFiles([file.path], text: 'My Transaction History (CSV)');
+  await Share.shareXFiles([XFile(file.path)], text: 'My Transaction History (CSV)');
 }
 
 Future<void> exportToPdf(List<Map<String, dynamic>> transactions) async {
@@ -106,7 +114,7 @@ Future<void> exportToPdf(List<Map<String, dynamic>> transactions) async {
         children: [
           pw.Text('Transaction History', style: pw.TextStyle(fontSize: 24)),
           pw.SizedBox(height: 16),
-          pw.Table.fromTextArray(
+          pw.TableHelper.fromTextArray(
             headers: ['Type', 'Amount', 'Date', 'Counterparty'],
             data: transactions.map((tx) => [
               tx['type'] ?? '',
@@ -122,5 +130,5 @@ Future<void> exportToPdf(List<Map<String, dynamic>> transactions) async {
   final dir = await getTemporaryDirectory();
   final file = File('${dir.path}/transactions.pdf');
   await file.writeAsBytes(await pdf.save());
-  await Share.shareFiles([file.path], text: 'My Transaction History (PDF)');
+  await Share.shareXFiles([XFile(file.path)], text: 'My Transaction History (PDF)');
 } 

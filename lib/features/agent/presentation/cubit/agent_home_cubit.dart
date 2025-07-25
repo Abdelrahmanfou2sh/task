@@ -1,14 +1,14 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../../auth/presentation/cubit/auth_cubit.dart';
+import '../../data/repositories/agent_repository.dart';
 
 part 'agent_home_state.dart';
 
 class AgentHomeCubit extends Cubit<AgentHomeState> {
-  final FirebaseFirestore firestore;
+  final AgentRepository repository;
   final AuthCubit authCubit;
 
-  AgentHomeCubit({required this.firestore, required this.authCubit}) : super(AgentHomeLoading()) {
+  AgentHomeCubit({required this.repository, required this.authCubit}) : super(AgentHomeLoading()) {
     fetchData();
   }
 
@@ -21,13 +21,8 @@ class AgentHomeCubit extends Cubit<AgentHomeState> {
         return;
       }
       final uid = authState.user.id;
-      final agentDoc = await firestore.collection('users').doc(uid).get();
-      final balance = (agentDoc.data()?['balance'] ?? 0.0) as num;
-      final requestsSnap = await firestore.collection('requests')
-        .where('status', isEqualTo: 'pending')
-        .get();
-      final requests = requestsSnap.docs.map((doc) => doc.data()..['id'] = doc.id).toList();
-      emit(AgentHomeLoaded(balance: balance.toDouble(), requests: requests));
+      final data = await repository.getAgentData(uid);
+      emit(AgentHomeLoaded(balance: data['balance'], requests: data['requests']));
     } catch (e) {
       emit(AgentHomeError('Failed to fetch agent data: $e'));
     }
@@ -35,7 +30,7 @@ class AgentHomeCubit extends Cubit<AgentHomeState> {
 
   Future<void> updateRequestStatus(String requestId, String status) async {
     try {
-      await firestore.collection('requests').doc(requestId).update({'status': status});
+      await repository.updateRequestStatus(requestId, status);
       fetchData();
     } catch (e) {
       // Optionally emit error state
